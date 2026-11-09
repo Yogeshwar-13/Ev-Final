@@ -32,6 +32,16 @@ The Node API reads station records from `ev_stations`; it does not silently subs
 
 ### Vercel deployment
 
-Vercel serves the API through the included `api/[...path].ts` serverless function. Configure `DATABASE_URL` in the Vercel project settings to point to a network-accessible managed MySQL database containing `ev_stations`, and set `DB_SSL=true` when the provider requires TLS. Do not use `localhost` for the Vercel database host. Import the generated `backend/schema.sql` into that database before deployment. `DB_CONNECTION_LIMIT` can be lowered (for example, to `2`) for serverless database connection limits.
+The production build uses Nitro's Vercel preset to deploy the TanStack Start server-rendered app. Keep the Vercel project root set to this directory (the one containing `package.json` and `vercel.json`); the build command is `npm run build`. Do not configure a static output directory or an SPA rewrite, as those bypass the server-rendered routes and API function.
+
+The REST API is handled by TanStack Start server routes and shares the same Vercel server function. Before deployment:
+
+1. Provision a managed MySQL database that is reachable from Vercel.
+2. Import `backend/schema.sql` into it, including the station data.
+3. Add `DATABASE_URL` in the Vercel project's Production environment variables. Use a `mysql://` or `mysqls://` URL and never use `localhost`.
+4. Set `DB_SSL=true` if the database provider requires TLS. Set `DB_CONNECTION_LIMIT=2` (or the limit recommended by the provider) to keep serverless connections within the database plan's limits.
+5. Deploy, then check `/api/v1/health`; it should return `"database":"connected"` and the expected station count.
+
+The database URL is intentionally not committed to the repository. Preview and Development deployments need their own database environment values if they should serve live data.
 
 No login, user accounts, favorites, or booking features are included. Station reviews are public and stored in MySQL without user accounts. The API does not require authentication.

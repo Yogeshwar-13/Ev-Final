@@ -5,15 +5,15 @@ const runtimeEnv = (
     process?: { env?: Record<string, string | undefined> };
   }
 ).process?.env;
-const configuredApiUrl = import.meta.env.VITE_API_URL;
+const configuredApiUrl = import.meta.env["VITE_API_URL"];
 const browserApiUrl =
   typeof window !== "undefined"
     ? window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
       ? "http://localhost:5000/api/v1"
       : `${window.location.origin}/api/v1`
     : undefined;
-const deployedServerApiUrl = runtimeEnv?.VERCEL_URL
-  ? `https://${runtimeEnv.VERCEL_URL}/api/v1`
+const deployedServerApiUrl = runtimeEnv?.["VERCEL_URL"]
+  ? `https://${runtimeEnv["VERCEL_URL"]}/api/v1`
   : undefined;
 const API_BASE_URL =
   configuredApiUrl || browserApiUrl || deployedServerApiUrl || "http://localhost:5000/api/v1";
