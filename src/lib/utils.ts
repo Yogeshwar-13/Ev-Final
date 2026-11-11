@@ -33,14 +33,16 @@ const CANONICAL_CITY_ALIASES: Record<string, string> = {
   vizag: "Visakhapatnam",
   gurugram: "Gurugram",
   gurgaon: "Gurugram",
+  noida: "Noida",
+  "greater noida": "Noida",
 };
 
 /**
  * Validates whether a station belongs to the target city filter.
- * Prevents false matches (e.g. Chennai stations showing in Mumbai due to street/road names).
+ * Prevents false matches (e.g. Chennai stations showing in Mumbai, or Delhi stations showing in Gurugram).
  */
 export function matchesCity(
-  station: { city?: string | null; lat?: number | null; lng?: number | null },
+  station: { city?: string | null; state?: string | null; lat?: number | null; lng?: number | null },
   targetCity: string | undefined | null
 ): boolean {
   if (!targetCity || targetCity === "All India" || targetCity.toLowerCase() === "all") {
@@ -50,15 +52,22 @@ export function matchesCity(
   const cleanTarget = targetCity.trim().toLowerCase();
   const stationCity = (station.city || "").trim().toLowerCase();
 
-  const canonicalTarget = CANONICAL_CITY_ALIASES[cleanTarget] || targetCity.trim();
-  const canonicalStation = CANONICAL_CITY_ALIASES[stationCity] || (station.city || "").trim();
+  // 1. Direct state match (e.g. filtering by a state like "Goa" or "Kerala")
+  if (station.state && station.state.toLowerCase() === cleanTarget) {
+    return true;
+  }
 
-  // 1. Check if city or canonical alias matches
+  const canonicalTarget = (CANONICAL_CITY_ALIASES[cleanTarget] || targetCity.trim()).toLowerCase();
+  const canonicalStation = (CANONICAL_CITY_ALIASES[stationCity] || (station.city || "").trim()).toLowerCase();
+
+  // 2. Check if city or canonical alias matches
   const nameMatches =
     stationCity === cleanTarget ||
-    canonicalStation.toLowerCase() === canonicalTarget.toLowerCase();
+    canonicalStation === canonicalTarget ||
+    stationCity.includes(cleanTarget) ||
+    cleanTarget.includes(stationCity);
 
-  // 2. Physical GPS coordinate check against target city
+  // 3. Physical GPS coordinate check against target city
   if (
     station.lat !== undefined &&
     station.lat !== null &&
@@ -68,14 +77,26 @@ export function matchesCity(
     !isNaN(station.lng)
   ) {
     const targetCoord =
-      cityCoordinates[canonicalTarget] || cityCoordinates[targetCity.trim()];
+      cityCoordinates[CANONICAL_CITY_ALIASES[cleanTarget] || targetCity.trim()];
     if (targetCoord) {
       const dist = calculateDistanceKm(station.lat, station.lng, targetCoord.lat, targetCoord.lng);
-      // Station must be within 75km of the target city center to be considered part of that city
+      // Hard cutoff: Station must be within 75km of the target city center
       if (dist > 75) {
         return false;
       }
-      return nameMatches || dist <= 35;
+      if (nameMatches) {
+        return true;
+      }
+
+      // If station explicitly belongs to another major city in the region, do not cross-match
+      // (e.g., Gurugram stations shouldn't bleed into New Delhi or vice-versa)
+      const majorCitySet = new Set(Object.keys(cityCoordinates).map((c) => c.toLowerCase()));
+      if (majorCitySet.has(canonicalStation) && canonicalStation !== canonicalTarget) {
+        return false;
+      }
+
+      // For unmapped suburbs/localities within 35km of city center
+      return dist <= 35;
     }
   }
 

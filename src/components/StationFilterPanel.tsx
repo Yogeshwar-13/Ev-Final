@@ -34,6 +34,17 @@ const SPEED_TIERS = [
   { key: "200", label: "200 kW+", desc: "Hyper Fast (<15m)" },
 ];
 
+const POPULAR_NETWORKS = [
+  { id: "Tata Power", label: "Tata Power" },
+  { id: "Ather", label: "Ather Grid" },
+  { id: "Jio-bp", label: "Jio-bp pulse" },
+  { id: "BPCL", label: "BPCL e-Drive" },
+  { id: "Statiq", label: "Statiq" },
+  { id: "Charge Zone", label: "Charge Zone" },
+  { id: "Zeon", label: "Zeon Charging" },
+  { id: "Bolt.Earth", label: "Bolt.Earth" },
+];
+
 export function StationFilterPanel({
   filters,
   onFilterChange,
@@ -247,6 +258,48 @@ export function StationFilterPanel({
               title={c.desc}
             >
               {c.id}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 5. Charging Network */}
+      <div>
+        <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-frost/70 mb-2 font-bold">
+          <span>Charging Network</span>
+          {filters.network && (
+            <button
+              onClick={() => onFilterChange({ network: undefined })}
+              className="text-accent text-[11px] hover:underline lowercase font-normal"
+            >
+              clear
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => onFilterChange({ network: undefined })}
+            className={chip(!filters.network)}
+          >
+            All Networks
+          </button>
+          {POPULAR_NETWORKS.map((n) => (
+            <button
+              key={n.id}
+              onClick={() =>
+                onFilterChange({
+                  network:
+                    filters.network?.toLowerCase() === n.id.toLowerCase()
+                      ? undefined
+                      : n.id,
+                })
+              }
+              className={chip(
+                filters.network?.toLowerCase() === n.id.toLowerCase() ||
+                  Boolean(filters.network && n.label.toLowerCase().includes(filters.network.toLowerCase())),
+              )}
+            >
+              {n.label}
             </button>
           ))}
         </div>

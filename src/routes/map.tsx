@@ -150,9 +150,10 @@ function LiveMapPage() {
         const q = query.toLowerCase();
         const matchName = s.name.toLowerCase().includes(q);
         const matchCity = s.city.toLowerCase().includes(q);
+        const matchState = s.state?.toLowerCase().includes(q);
         const matchAddr = s.address.toLowerCase().includes(q);
         const matchNet = s.network.toLowerCase().includes(q);
-        if (!matchName && !matchCity && !matchAddr && !matchNet) return false;
+        if (!matchName && !matchCity && !matchState && !matchAddr && !matchNet) return false;
       }
 
       return true;
