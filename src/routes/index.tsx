@@ -6,7 +6,7 @@ import { IndiaEvMap } from "../components/IndiaEvMap";
 import { StationDetailModal } from "../components/StationDetailModal";
 import { cities, cityCoordinates, Station, MAJOR_CITIES, TOP_CITIES } from "../data/stations";
 import { useStations } from "../hooks/useStations";
-import { calculateDistanceKm, getClosestCity } from "../lib/utils";
+import { calculateDistanceKm, getClosestCity, matchesCity } from "../lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -78,14 +78,7 @@ function Index() {
   const nearby = useMemo(() => {
     let list = stations;
     if (selectedCity !== "All India") {
-      const q = selectedCity.toLowerCase();
-      list = stations.filter(
-        (s) =>
-          s.city.toLowerCase() === q ||
-          s.city.toLowerCase().includes(q) ||
-          s.address.toLowerCase().includes(q) ||
-          s.name.toLowerCase().includes(q)
-      );
+      list = stations.filter((s) => matchesCity(s, selectedCity));
     }
 
     // If user GPS is available, sort nearest first

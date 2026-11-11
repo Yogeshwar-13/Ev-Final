@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { SiteChrome } from "../components/SiteChrome";
 import { IndiaEvMap } from "../components/IndiaEvMap";
-import { statusMeta } from "../data/stations";
+import { Station, statusMeta } from "../data/stations";
 import { fetchStationById } from "../lib/api";
 
 export const Route = createFileRoute("/station/$stationId")({
@@ -48,7 +48,7 @@ const toneDot: Record<string, string> = {
 };
 
 function StationDetailPage() {
-  const station = Route.useLoaderData();
+  const station = Route.useLoaderData() as Station;
   const meta = statusMeta[station.status];
 
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`;
@@ -112,7 +112,7 @@ function StationDetailPage() {
             <div className="mt-8 rounded-2xl glass-panel p-6">
               <h2 className="font-display text-xl font-bold">Connectors</h2>
               <div className="mt-4 flex flex-wrap gap-2">
-                {station.connectors.map((c) => (
+                {station.connectors.map((c: string) => (
                   <span
                     key={c}
                     className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-sm text-accent font-semibold"
@@ -123,7 +123,7 @@ function StationDetailPage() {
               </div>
               <h2 className="mt-8 font-display text-xl font-bold">Amenities</h2>
               <div className="mt-4 flex flex-wrap gap-2">
-                {station.amenities.map((a) => (
+                {station.amenities.map((a: string) => (
                   <span
                     key={a}
                     className="rounded-lg border border-border px-3 py-1.5 text-sm text-frost/70"

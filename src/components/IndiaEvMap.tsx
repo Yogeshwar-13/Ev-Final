@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useId, useCallback } from "react";
 import type * as LType from "leaflet";
 import { Station, stations as allStations, INDIA_CENTER, cityCoordinates, statusMeta } from "../data/stations";
 import { useTheme } from "../lib/theme";
-import { getClosestCity } from "../lib/utils";
+import { getClosestCity, matchesCity } from "../lib/utils";
 
 export type TileStyle = "streets" | "satellite" | "osm";
 
@@ -125,9 +125,7 @@ export function IndiaEvMap({
       });
     } else {
       // Find stations in this city and fit bounds
-      const matchingStations = stations.filter(
-        (s) => s.city.toLowerCase() === cityName.toLowerCase()
-      );
+      const matchingStations = stations.filter((s) => matchesCity(s, cityName));
       if (matchingStations.length > 0) {
         import("leaflet").then((L) => {
           if (!mapInstanceRef.current) return;

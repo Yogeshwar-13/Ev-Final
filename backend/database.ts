@@ -143,8 +143,8 @@ function buildStationWhere(filters: StationFilters) {
   const clauses: string[] = [];
   const values: (string | number)[] = [];
   if (filters.city && !["all", "all india"].includes(filters.city.toLowerCase())) {
-    clauses.push("(`city` LIKE ? OR `address` LIKE ?)");
-    values.push(`%${filters.city}%`, `%${filters.city}%`);
+    clauses.push("`city` LIKE ?");
+    values.push(`%${filters.city}%`);
   }
   if (filters.network && filters.network.toLowerCase() !== "all") {
     clauses.push("`network` LIKE ?");

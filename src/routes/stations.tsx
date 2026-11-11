@@ -6,7 +6,7 @@ import { StationFilterPanel, StationFiltersState } from "../components/StationFi
 import { StationDetailModal } from "../components/StationDetailModal";
 import { Station, cityCoordinates } from "../data/stations";
 import { useStations } from "../hooks/useStations";
-import { matchesConnector, calculateDistanceKm, getClosestCity } from "../lib/utils";
+import { matchesConnector, matchesCity, calculateDistanceKm, getClosestCity } from "../lib/utils";
 
 type StationSearch = {
   city?: string | undefined;
@@ -96,7 +96,7 @@ function StationsPage() {
   const results = useMemo(() => {
     return stations.filter((s) => {
       // 1. City Filter
-      if (search.city && s.city.toLowerCase() !== search.city.toLowerCase()) return false;
+      if (search.city && !matchesCity(s, search.city)) return false;
 
       // 2. Charging Type (DC Fast vs AC)
       if (search.type === "dc") {
@@ -111,7 +111,11 @@ function StationsPage() {
         if (!isDc) return false;
       } else if (search.type === "ac") {
         const isAc = s.connectors.some(
-          (c) => c.toUpperCase().includes("AC") || c.toUpperCase().includes("TYPE 2")
+          (c) =>
+            c.toUpperCase().includes("AC") ||
+            c.toUpperCase().includes("TYPE 2") ||
+            c.toUpperCase().includes("15A") ||
+            c.toUpperCase().includes("SOCKET")
         );
         if (!isAc) return false;
       }

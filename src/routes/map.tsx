@@ -6,13 +6,14 @@ import { StationFilterPanel, StationFiltersState } from "../components/StationFi
 import { StationDetailModal } from "../components/StationDetailModal";
 import { cityCoordinates, statusMeta, Station } from "../data/stations";
 import { useStations } from "../hooks/useStations";
-import { matchesConnector } from "../lib/utils";
+import { matchesConnector, matchesCity } from "../lib/utils";
 
 type MapSearch = {
   city?: string | undefined;
   type?: "dc" | "ac" | "all" | undefined;
   connector?: string | undefined;
   power?: string | undefined;
+  network?: string | undefined;
   availability?: "available" | "limited" | "all" | undefined;
   amenity?: string | undefined;
   maxPrice?: string | undefined;
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/map")({
         : undefined,
     connector: typeof search["connector"] === "string" ? search["connector"] : undefined,
     power: typeof search["power"] === "string" ? search["power"] : undefined,
+    network: typeof search["network"] === "string" ? search["network"] : undefined,
     availability:
       search["availability"] === "available" ||
       search["availability"] === "limited" ||
@@ -91,14 +93,8 @@ function LiveMapPage() {
   const filteredStations = useMemo(() => {
     return stations.filter((s) => {
       // 1. City Filter
-      if (search.city) {
-        const c = search.city.toLowerCase();
-        const matchCity =
-          s.city.toLowerCase() === c ||
-          s.city.toLowerCase().includes(c) ||
-          s.address.toLowerCase().includes(c) ||
-          (c.includes("delhi") && (s.city.toLowerCase().includes("delhi") || s.city.toLowerCase().includes("noida") || s.city.toLowerCase().includes("gurugram")));
-        if (!matchCity) return false;
+      if (search.city && !matchesCity(s, search.city)) {
+        return false;
       }
 
       // 2. Charging Type (DC Fast vs AC)
@@ -114,7 +110,11 @@ function LiveMapPage() {
         if (!isDc) return false;
       } else if (search.type === "ac") {
         const isAc = s.connectors.some(
-          (c) => c.toUpperCase().includes("AC") || c.toUpperCase().includes("TYPE 2")
+          (c) =>
+            c.toUpperCase().includes("AC") ||
+            c.toUpperCase().includes("TYPE 2") ||
+            c.toUpperCase().includes("15A") ||
+            c.toUpperCase().includes("SOCKET")
         );
         if (!isAc) return false;
       }
@@ -125,24 +125,27 @@ function LiveMapPage() {
       // 4. Charging Speed / Min Power (kW)
       if (search.power && s.maxPowerKw < Number(search.power)) return false;
 
-      // 5. Availability Status
+      // 5. Network filter
+      if (search.network && !s.network.toLowerCase().includes(search.network.toLowerCase())) return false;
+
+      // 6. Availability Status
       if (search.availability === "available" && s.status !== "available") return false;
       if (search.availability === "limited" && s.status !== "limited") return false;
 
-      // 6. Free Ports Check
+      // 7. Free Ports Check
       if (search.onlyFreePorts && s.freePorts <= 0) return false;
 
-      // 7. Max Price
+      // 8. Max Price
       if (search.maxPrice && s.pricePerKwh > Number(search.maxPrice)) return false;
 
-      // 8. Amenities
+      // 9. Amenities
       if (
         search.amenity &&
         !s.amenities.some((a) => a.toLowerCase().includes(search.amenity!.toLowerCase()))
       )
         return false;
 
-      // 9. Search query
+      // 10. Search query
       if (query) {
         const q = query.toLowerCase();
         const matchName = s.name.toLowerCase().includes(q);
@@ -160,6 +163,7 @@ function LiveMapPage() {
     search.type,
     search.connector,
     search.power,
+    search.network,
     search.availability,
     search.onlyFreePorts,
     search.maxPrice,
@@ -182,6 +186,7 @@ function LiveMapPage() {
     search.type,
     search.connector,
     search.power,
+    search.network,
     search.availability,
     search.amenity,
     search.maxPrice,

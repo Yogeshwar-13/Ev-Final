@@ -129,48 +129,84 @@ function cleanNetworkPHP($rawNetwork, $name) {
     return "Public Charging Network";
 }
 
-function cleanCityPHP($rawCity, $address, $name) {
-    $text = strtolower($rawCity . ' ' . $address . ' ' . $name);
-    if (preg_match('/bengaluru|bangalore/i', $text)) return 'Bengaluru';
-    if (preg_match('/mumbai|bombay|navi mumbai|thane|borivali|andheri/i', $text)) return 'Mumbai';
-    if (preg_match('/new delhi|delhi|noida|greater noida|gurugram|gurgaon|faridabad|ghaziabad/i', $text)) return 'New Delhi';
-    if (preg_match('/hyderabad|secunderabad|gachibowli|hitec/i', $text)) return 'Hyderabad';
-    if (preg_match('/chennai|madras|guindy|omr|velachery/i', $text)) return 'Chennai';
-    if (preg_match('/pune|pimpri|chinchwad|hinjewadi/i', $text)) return 'Pune';
-    if (preg_match('/kolkata|calcutta|howrah|salt lake/i', $text)) return 'Kolkata';
-    if (preg_match('/ahmedabad|gandhinagar/i', $text)) return 'Ahmedabad';
-    if (preg_match('/jaipur/i', $text)) return 'Jaipur';
-    if (preg_match('/kochi|cochin|ernakulam/i', $text)) return 'Kochi';
-    if (preg_match('/chandigarh|mohali|panchkula/i', $text)) return 'Chandigarh';
-    if (preg_match('/lucknow/i', $text)) return 'Lucknow';
-    if (preg_match('/surat/i', $text)) return 'Surat';
-    if (preg_match('/indore/i', $text)) return 'Indore';
-    if (preg_match('/coimbatore/i', $text)) return 'Coimbatore';
-    if (preg_match('/goa|panaji|margao|calangute/i', $text)) return 'Goa';
-    if (preg_match('/nagpur/i', $text)) return 'Nagpur';
-    if (preg_match('/vadodara|baroda/i', $text)) return 'Vadodara';
-    if (preg_match('/bhopal/i', $text)) return 'Bhopal';
-    if (preg_match('/visakhapatnam|vizag/i', $text)) return 'Visakhapatnam';
-    if (preg_match('/patna/i', $text)) return 'Patna';
-    if (preg_match('/agra/i', $text)) return 'Agra';
-    if (preg_match('/varanasi|banaras/i', $text)) return 'Varanasi';
-    if (preg_match('/amritsar/i', $text)) return 'Amritsar';
-    if (preg_match('/bhubaneswar|cuttack/i', $text)) return 'Bhubaneswar';
-    if (preg_match('/guwahati/i', $text)) return 'Guwahati';
-    if (preg_match('/dehradun/i', $text)) return 'Dehradun';
-    if (preg_match('/thiruvananthapuram|trivandrum/i', $text)) return 'Thiruvananthapuram';
-    if (preg_match('/mysore|mysuru/i', $text)) return 'Mysore';
-    if (preg_match('/mangalore|mangaluru/i', $text)) return 'Mangalore';
-    if (preg_match('/ludhiana/i', $text)) return 'Ludhiana';
-    if (preg_match('/kanpur/i', $text)) return 'Kanpur';
-    if (preg_match('/nashik/i', $text)) return 'Nashik';
-    if (preg_match('/rajkot/i', $text)) return 'Rajkot';
-    if (preg_match('/vijayawada/i', $text)) return 'Vijayawada';
-    if (preg_match('/madurai/i', $text)) return 'Madurai';
-    if (preg_match('/raipur/i', $text)) return 'Raipur';
-    if (preg_match('/ranchi/i', $text)) return 'Ranchi';
-    if (preg_match('/jodhpur/i', $text)) return 'Jodhpur';
-    if (preg_match('/udaipur/i', $text)) return 'Udaipur';
+function getDistanceKmPHP($lat1, $lon1, $lat2, $lon2) {
+    $r = 6371;
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+    $a = sin($dLat / 2) * sin($dLat / 2) +
+         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+         sin($dLon / 2) * sin($dLon / 2);
+    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+    return $r * $c;
+}
+
+function cleanCityPHP($lat, $lng, $rawCity, $address, $name) {
+    static $cityCoords = [
+        'Bengaluru' => ['lat' => 12.9716, 'lng' => 77.5946],
+        'Mumbai' => ['lat' => 19.076, 'lng' => 72.8777],
+        'New Delhi' => ['lat' => 28.6139, 'lng' => 77.209],
+        'Gurugram' => ['lat' => 28.4595, 'lng' => 77.0266],
+        'Noida' => ['lat' => 28.5355, 'lng' => 77.391],
+        'Hyderabad' => ['lat' => 17.385, 'lng' => 78.4867],
+        'Chennai' => ['lat' => 13.0827, 'lng' => 80.2707],
+        'Pune' => ['lat' => 18.5204, 'lng' => 73.8567],
+        'Kolkata' => ['lat' => 22.5726, 'lng' => 88.3639],
+        'Ahmedabad' => ['lat' => 23.0225, 'lng' => 72.5714],
+        'Jaipur' => ['lat' => 26.9124, 'lng' => 75.7873],
+        'Kochi' => ['lat' => 9.9312, 'lng' => 76.2673],
+        'Chandigarh' => ['lat' => 30.7333, 'lng' => 76.7794],
+        'Lucknow' => ['lat' => 26.8467, 'lng' => 80.9462],
+        'Surat' => ['lat' => 21.1702, 'lng' => 72.8311],
+        'Indore' => ['lat' => 22.7196, 'lng' => 75.8577],
+        'Coimbatore' => ['lat' => 11.0168, 'lng' => 76.9558],
+        'Goa' => ['lat' => 15.2993, 'lng' => 74.124],
+        'Nagpur' => ['lat' => 21.1458, 'lng' => 79.0882],
+        'Vadodara' => ['lat' => 22.3072, 'lng' => 73.1812],
+        'Bhopal' => ['lat' => 23.2599, 'lng' => 77.4126],
+        'Visakhapatnam' => ['lat' => 17.6868, 'lng' => 83.2185],
+        'Patna' => ['lat' => 25.5941, 'lng' => 85.1376],
+        'Agra' => ['lat' => 27.1767, 'lng' => 78.0081],
+        'Varanasi' => ['lat' => 25.3176, 'lng' => 82.9739],
+        'Amritsar' => ['lat' => 31.634, 'lng' => 74.8723],
+        'Bhubaneswar' => ['lat' => 20.2961, 'lng' => 85.8245],
+        'Guwahati' => ['lat' => 26.1445, 'lng' => 91.7362],
+        'Dehradun' => ['lat' => 30.3165, 'lng' => 78.0322],
+        'Thiruvananthapuram' => ['lat' => 8.5241, 'lng' => 76.9366],
+        'Mysore' => ['lat' => 12.2958, 'lng' => 76.6394],
+        'Mangalore' => ['lat' => 12.9141, 'lng' => 74.856],
+        'Ludhiana' => ['lat' => 30.901, 'lng' => 75.8573],
+        'Kanpur' => ['lat' => 26.4499, 'lng' => 80.3319],
+        'Nashik' => ['lat' => 19.9975, 'lng' => 73.7898],
+        'Rajkot' => ['lat' => 22.3039, 'lng' => 70.8022],
+        'Vijayawada' => ['lat' => 16.5062, 'lng' => 80.648],
+        'Madurai' => ['lat' => 9.9252, 'lng' => 78.1198],
+        'Raipur' => ['lat' => 21.2514, 'lng' => 81.6296],
+        'Ranchi' => ['lat' => 23.3441, 'lng' => 85.3096],
+        'Jodhpur' => ['lat' => 26.2389, 'lng' => 73.0243],
+        'Udaipur' => ['lat' => 24.5854, 'lng' => 73.7125]
+    ];
+
+    // 1. Proximity check first
+    if ($lat != 0.0 && $lng != 0.0) {
+        $closest = '';
+        $minDist = 45;
+        foreach ($cityCoords as $cName => $coords) {
+            $d = getDistanceKmPHP($lat, $lng, $coords['lat'], $coords['lng']);
+            if ($d < $minDist) {
+                $minDist = $d;
+                $closest = $cName;
+            }
+        }
+        if ($closest !== '') {
+            if ($closest === 'New Delhi' || $closest === 'Gurugram' || $closest === 'Noida') {
+                $text = strtolower($address . ' ' . $rawCity);
+                if (preg_match('/gurugram|gurgaon/i', $text)) return 'Gurugram';
+                if (preg_match('/noida|greater noida/i', $text)) return 'Noida';
+                return 'New Delhi';
+            }
+            return $closest;
+        }
+    }
 
     if (!empty($rawCity) && strlen(trim($rawCity)) > 2 && strlen(trim($rawCity)) <= 25) {
         $c = trim($rawCity);
@@ -178,8 +214,24 @@ function cleanCityPHP($rawCity, $address, $name) {
             $parts = explode(',', $c);
             $c = trim($parts[0]);
         }
-        return ucfirst(strtolower($c));
+        if (!preg_match('/dealer|service|station|industrial|highway|toll|sector|opposite|petroleum/i', $c)) {
+            return ucfirst(strtolower($c));
+        }
     }
+
+    if (!empty($address)) {
+        $clean = trim(preg_replace('/\b[1-9][0-9]{5}\b/', '', $address));
+        $parts = array_filter(array_map('trim', explode(',', $clean)));
+        for ($i = count($parts) - 1; $i >= 0; $i--) {
+            $p = $parts[$i];
+            if (preg_match('/\d|hwy|highway|expressway|road|rd|nagar|colony|sector|floor|near|opp|plot|mall|complex/i', $p)) continue;
+            if (preg_match('/karnataka|maharashtra|tamil nadu|telangana|andhra|gujarat|rajasthan|madhya pradesh|uttar pradesh|kerala|punjab|haryana|bihar|odisha|west bengal|assam|jharkhand|chhattisgarh|uttarakhand|himachal/i', $p)) continue;
+            if (strlen($p) >= 3 && strlen($p) <= 25) {
+                return ucfirst(strtolower($p));
+            }
+        }
+    }
+
     return 'All India';
 }
 
@@ -220,7 +272,7 @@ while ($row = $result->fetch_assoc()) {
     $rawCap = $row['COL 11'] ?? $row['charging_capacity'] ?? $row['maxPowerKw'] ?? '';
 
     $name = trim($rawName);
-    $city = cleanCityPHP($rawCity, $rawAddr, $name);
+    $city = cleanCityPHP($lat, $lng, $rawCity, $rawAddr, $name);
     $network = cleanNetworkPHP($rawNet, $name);
     $connectors = parseConnectorsPHP($rawConn);
     $maxPowerKw = parsePowerPHP($rawCap, $rawConn, $name);

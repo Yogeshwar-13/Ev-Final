@@ -1,8 +1,85 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { cityCoordinates } from "../data/stations";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+const CANONICAL_CITY_ALIASES: Record<string, string> = {
+  delhi: "New Delhi",
+  "new delhi": "New Delhi",
+  bengaluru: "Bengaluru",
+  bangalore: "Bengaluru",
+  mumbai: "Mumbai",
+  bombay: "Mumbai",
+  chennai: "Chennai",
+  madras: "Chennai",
+  kolkata: "Kolkata",
+  calcutta: "Kolkata",
+  kochi: "Kochi",
+  cochin: "Kochi",
+  ernakulam: "Kochi",
+  mysore: "Mysore",
+  mysuru: "Mysore",
+  mangalore: "Mangalore",
+  mangaluru: "Mangalore",
+  vadodara: "Vadodara",
+  baroda: "Vadodara",
+  varanasi: "Varanasi",
+  banaras: "Varanasi",
+  kashi: "Varanasi",
+  visakhapatnam: "Visakhapatnam",
+  vizag: "Visakhapatnam",
+  gurugram: "Gurugram",
+  gurgaon: "Gurugram",
+};
+
+/**
+ * Validates whether a station belongs to the target city filter.
+ * Prevents false matches (e.g. Chennai stations showing in Mumbai due to street/road names).
+ */
+export function matchesCity(
+  station: { city?: string | null; lat?: number | null; lng?: number | null },
+  targetCity: string | undefined | null
+): boolean {
+  if (!targetCity || targetCity === "All India" || targetCity.toLowerCase() === "all") {
+    return true;
+  }
+
+  const cleanTarget = targetCity.trim().toLowerCase();
+  const stationCity = (station.city || "").trim().toLowerCase();
+
+  const canonicalTarget = CANONICAL_CITY_ALIASES[cleanTarget] || targetCity.trim();
+  const canonicalStation = CANONICAL_CITY_ALIASES[stationCity] || (station.city || "").trim();
+
+  // 1. Check if city or canonical alias matches
+  const nameMatches =
+    stationCity === cleanTarget ||
+    canonicalStation.toLowerCase() === canonicalTarget.toLowerCase();
+
+  // 2. Physical GPS coordinate check against target city
+  if (
+    station.lat !== undefined &&
+    station.lat !== null &&
+    station.lng !== undefined &&
+    station.lng !== null &&
+    !isNaN(station.lat) &&
+    !isNaN(station.lng)
+  ) {
+    const targetCoord =
+      cityCoordinates[canonicalTarget] || cityCoordinates[targetCity.trim()];
+    if (targetCoord) {
+      const dist = calculateDistanceKm(station.lat, station.lng, targetCoord.lat, targetCoord.lng);
+      // Station must be within 75km of the target city center to be considered part of that city
+      if (dist > 75) {
+        return false;
+      }
+      return nameMatches || dist <= 35;
+    }
+  }
+
+  return nameMatches;
 }
 
 /**
@@ -62,10 +139,13 @@ export function matchesConnector(
 
     // LECCS / Light EV / Ather / 2-wheeler
     if (
-      (cleanTarget.includes("leccs") || cleanTarget.includes("ather") || cleanTarget.includes("lightev")) &&
-      (conn.includes("leccs") || conn.includes("bharatac") || conn.includes("type2") || (stationNetwork && stationNetwork.toLowerCase().includes("ather")))
+      cleanTarget.includes("leccs") || cleanTarget.includes("ather") || cleanTarget.includes("lightev")
     ) {
-      return true;
+      return (
+        conn.includes("leccs") ||
+        conn.includes("ather") ||
+        Boolean(stationNetwork && stationNetwork.toLowerCase().includes("ather"))
+      );
     }
 
     // CHAdeMO
