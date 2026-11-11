@@ -14,6 +14,7 @@ import { Route as ConnectorsRouteImport } from './routes/connectors'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as StationsRouteImport } from './routes/stations'
 import { Route as StationStationIdRouteImport } from './routes/station.$stationId'
+import { Route as ApiV1SplatRouteImport } from './routes/api/v1/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const StationStationIdRoute = StationStationIdRouteImport.update({
   path: '/station/$stationId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
+  id: '/api/v1/$',
+  path: '/api/v1/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/map': typeof MapRoute
   '/stations': typeof StationsRoute
   '/station/$stationId': typeof StationStationIdRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/map': typeof MapRoute
   '/stations': typeof StationsRoute
   '/station/$stationId': typeof StationStationIdRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,12 +70,25 @@ export interface FileRoutesById {
   '/map': typeof MapRoute
   '/stations': typeof StationsRoute
   '/station/$stationId': typeof StationStationIdRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/connectors' | '/map' | '/stations' | '/station/$stationId'
+  fullPaths:
+    | '/'
+    | '/connectors'
+    | '/map'
+    | '/stations'
+    | '/station/$stationId'
+    | '/api/v1/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/connectors' | '/map' | '/stations' | '/station/$stationId'
+  to:
+    | '/'
+    | '/connectors'
+    | '/map'
+    | '/stations'
+    | '/station/$stationId'
+    | '/api/v1/$'
   id:
     | '__root__'
     | '/'
@@ -75,6 +96,7 @@ export interface FileRouteTypes {
     | '/map'
     | '/stations'
     | '/station/$stationId'
+    | '/api/v1/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,6 +105,7 @@ export interface RootRouteChildren {
   MapRoute: typeof MapRoute
   StationsRoute: typeof StationsRoute
   StationStationIdRoute: typeof StationStationIdRoute
+  ApiV1SplatRoute: typeof ApiV1SplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -122,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StationStationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/$': {
+      id: '/api/v1/$'
+      path: '/api/v1/$'
+      fullPath: '/api/v1/$'
+      preLoaderRoute: typeof ApiV1SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -131,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   MapRoute: MapRoute,
   StationsRoute: StationsRoute,
   StationStationIdRoute: StationStationIdRoute,
+  ApiV1SplatRoute: ApiV1SplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

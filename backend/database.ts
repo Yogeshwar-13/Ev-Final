@@ -181,11 +181,12 @@ export async function testDatabaseConnection() {
       ["ev_stations", "ev_reviews"],
     ),
   ]);
-  const [[countRows], [tables]] = results;
-  if (tables.length !== 2) {
+  const [countRows, tables] = results;
+  const countRow = countRows[0];
+  if (!countRow || tables.length !== 2) {
     throw new Error("Database schema is incomplete. Import the latest backend/schema.sql file.");
   }
-  return Number(countRows[0]?.["total"] || 0);
+  return Number(countRow["total"] || 0);
 }
 
 export async function listStations(filters: StationFilters, page: number, limit: number) {
