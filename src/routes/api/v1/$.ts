@@ -3,7 +3,7 @@ import { handleApiRequest } from "../../../../backend/api-handler";
 
 const handle = ({ request }: { request: Request }) => handleApiRequest(request);
 
-export const Route = createFileRoute("/api/v1/$")({
+export const Route = (createFileRoute("/api/v1/$") as any)({
   server: {
     handlers: {
       GET: handle,
