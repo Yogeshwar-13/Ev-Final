@@ -1,9 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isMapActive = pathname === "/map";
   const isListActive = pathname.startsWith("/stations") || pathname.startsWith("/station");
   const isConnectorsActive = pathname === "/connectors" || pathname.startsWith("/connector");
@@ -25,18 +27,24 @@ export function SiteChrome({ children }: { children: ReactNode }) {
       </div>
 
       <div className="relative">
-        <header className="flex items-center justify-between px-6 sm:px-8 lg:px-14 py-4 border-b border-border/50 bg-background/40 backdrop-blur-md sticky top-0 z-50">
-          <Link to="/" className="flex items-center gap-3">
+        <header className="flex flex-wrap items-center justify-between px-6 sm:px-8 lg:px-14 py-4 border-b border-border/50 bg-background/40 backdrop-blur-md sticky top-0 z-50">
+          <Link
+            to="/"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3"
+          >
             <div className="grid size-9 place-items-center rounded-xl charge-button font-display font-black shadow-md shadow-accent/20">
               ⚡
             </div>
-            <span className="font-display text-xl font-extrabold tracking-tight">
-              EvFinder
-            </span>
+            <span className="font-display text-xl font-extrabold tracking-tight">EvFinder</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-2 text-sm font-semibold">
+          <nav
+            id="primary-navigation"
+            className={`${isMobileMenuOpen ? "flex" : "hidden"} order-3 w-full flex-col items-stretch gap-2 pt-3 text-sm font-semibold md:order-none md:flex md:w-auto md:flex-row md:items-center md:pt-0`}
+          >
             <Link
               to="/map"
+              onClick={() => setIsMobileMenuOpen(false)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
                 isMapActive
                   ? "bg-accent/15 text-accent border border-accent/40 font-bold shadow-sm shadow-accent/10"
@@ -48,6 +56,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
             </Link>
             <Link
               to="/stations"
+              onClick={() => setIsMobileMenuOpen(false)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
                 isListActive
                   ? "bg-accent/15 text-accent border border-accent/40 font-bold shadow-sm shadow-accent/10"
@@ -59,17 +68,54 @@ export function SiteChrome({ children }: { children: ReactNode }) {
             </Link>
             <Link
               to="/connectors"
+              onClick={() => setIsMobileMenuOpen(false)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
                 isConnectorsActive
                   ? "bg-accent/15 text-accent border border-accent/40 font-bold shadow-sm shadow-accent/10"
                   : "text-frost/70 hover:text-foreground hover:bg-ink2/60 border border-transparent"
               }`}
             >
-              {isConnectorsActive && <span className="size-2 rounded-full bg-accent animate-pulse" />}
+              {isConnectorsActive && (
+                <span className="size-2 rounded-full bg-accent animate-pulse" />
+              )}
               Connector Guide
             </Link>
           </nav>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="primary-navigation"
+              onClick={() => setIsMobileMenuOpen((open) => !open)}
+              className="inline-flex size-9 items-center justify-center rounded-xl border border-border bg-ink2/80 text-foreground transition hover:border-accent/50 hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
+            >
+              {isMobileMenuOpen ? (
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="m18 6-12 12M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
             {/* Theme Toggle Button */}
             <ThemeToggle />
           </div>

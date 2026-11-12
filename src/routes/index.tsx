@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { SiteChrome } from "../components/SiteChrome";
 import { StationCard } from "../components/StationCard";
 import { IndiaEvMap } from "../components/IndiaEvMap";
@@ -34,6 +34,12 @@ function Index() {
   const [projectedStation, setProjectedStation] = useState<Station | null>(null);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [isAutoLocated, setIsAutoLocated] = useState(false);
+  const hasManuallySelectedCity = useRef(false);
+
+  const selectCity = (city: string) => {
+    hasManuallySelectedCity.current = true;
+    setSelectedCity(city);
+  };
 
   // Automatically detect user location and switch to their local area immediately
   useEffect(() => {
@@ -43,7 +49,7 @@ function Index() {
           const { latitude, longitude } = pos.coords;
           setUserCoords({ lat: latitude, lng: longitude });
           const closest = getClosestCity(latitude, longitude, cityCoordinates);
-          if (closest) {
+          if (closest && !hasManuallySelectedCity.current) {
             setSelectedCity(closest);
             setIsAutoLocated(true);
           }
@@ -51,7 +57,7 @@ function Index() {
         () => {
           // Graceful fallback to default if user denies permission
         },
-        { timeout: 8000, enableHighAccuracy: true }
+        { timeout: 8000, enableHighAccuracy: true },
       );
     }
   }, []);
@@ -121,7 +127,7 @@ function Index() {
               </span>
               <select
                 value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
+                onChange={(e) => selectCity(e.target.value)}
                 className="w-full mt-0.5 font-semibold text-sm text-foreground bg-transparent focus:outline-none cursor-pointer"
               >
                 <option value="All India" className="bg-background text-foreground font-bold">
@@ -148,7 +154,7 @@ function Index() {
           <div className="mt-3.5 flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-frost/50 text-[11px] font-semibold mr-1">Quick Select:</span>
             <button
-              onClick={() => setSelectedCity("All India")}
+              onClick={() => selectCity("All India")}
               className={`rounded-full px-3 py-1 font-semibold transition text-xs ${
                 selectedCity === "All India"
                   ? "bg-accent text-accent-foreground border border-accent/40 shadow-sm"
@@ -160,7 +166,7 @@ function Index() {
             {TOP_CITIES.map((city) => (
               <button
                 key={city}
-                onClick={() => setSelectedCity(city)}
+                onClick={() => selectCity(city)}
                 className={`rounded-full px-3 py-1 font-semibold transition text-xs ${
                   selectedCity === city
                     ? "bg-accent text-accent-foreground border border-accent/40 shadow-sm"
@@ -223,7 +229,7 @@ function Index() {
             <IndiaEvMap
               stations={stations}
               selectedCity={selectedCity}
-              onCityChange={setSelectedCity}
+              onCityChange={selectCity}
               onSelectStation={(st) => setProjectedStation(st)}
               height="100%"
               showControls={true}
@@ -231,6 +237,7 @@ function Index() {
               showLayerSelector={true}
               showRangeOverlay={true}
               enableLocateMe={true}
+              autoLocateOnLoad={false}
             />
           </div>
         </div>
@@ -252,7 +259,7 @@ function Index() {
           {cities.map((c) => (
             <button
               key={c.name}
-              onClick={() => setSelectedCity(c.name)}
+              onClick={() => selectCity(c.name)}
               className={`rounded-full border px-4 py-1.5 text-sm transition ${
                 selectedCity === c.name
                   ? "border-accent bg-accent/20 text-accent font-bold ring-1 ring-accent/40"
